@@ -1,2 +1,2 @@
 # guess-language
-Guess the idiom of a text
+Guess the natural language of a text
