@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,20 +13,20 @@ import (
 	"unicode"
 
 	"github.com/jonathansp/guess-language/blocks"
+	"github.com/jonathansp/guess-language/collections"
+	"github.com/jonathansp/guess-language/languageinfo"
 	"golang.org/x/text/unicode/norm"
+)
+
+const (
+	minLength = 20
+	maxGrams  = 300
 )
 
 type (
 	//Guesser ...
 	Guesser struct {
 		trigrams map[string]map[string]int
-	}
-	// Language ...
-	Language struct {
-		id   int
-		tag  int
-		name string
-		info string
 	}
 )
 
@@ -36,6 +37,7 @@ func GuessLanguage() *Guesser {
 	return &instance
 }
 
+// TODO: send to a help
 func in(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
@@ -45,8 +47,64 @@ func in(a string, list []string) bool {
 	return false
 }
 
+func (gl *Guesser) createModel(content string) []string {
+	trigrams := make(map[string]int)
+	content = strings.ToLower(content)
+	for i := 0; i <= len(content)-2; i++ {
+		end := i + 3
+		if end > len(content) {
+			end = len(content) - 1
+		}
+		_, ok := trigrams[content[i:end]]
+		if !ok {
+			trigrams[content[i:end]] = 0
+		}
+		trigrams[content[i:end]]++
+	}
+	var data []string
+	for _, res := range collections.SortedKeys(trigrams) {
+		data = append(data, res)
+	}
+	return data
+
+}
+
+func (gl *Guesser) distance(foundModels []string, knownModel map[string]int) float64 {
+	var dist float64
+	if len(foundModels) > maxGrams {
+		foundModels = foundModels[:maxGrams]
+	}
+
+	for i, value := range foundModels {
+		if !strings.Contains(value, "  ") {
+			if _, ok := knownModel[value]; ok {
+				dist += math.Abs(float64(i - knownModel[value]))
+			} else {
+				dist += maxGrams
+			}
+		}
+	}
+	return dist
+}
+
 func (gl *Guesser) check(sample string, languageSet []string) string {
-	return ""
+	if len(sample) < minLength {
+		return "UNKNOWN"
+	}
+	model := gl.createModel(sample)
+	minDistance := math.Inf(1)
+	lastLang := "UNKNOWN"
+	for _, lang := range languageSet {
+		lang := strings.ToLower(lang)
+		if value, ok := gl.trigrams[lang]; ok {
+			distance := gl.distance(model, value)
+			if distance < minDistance {
+				minDistance = distance
+				lastLang = lang
+			}
+		}
+	}
+	return lastLang
 }
 
 func (gl *Guesser) identify(sample string, scripts []string) string {
@@ -58,6 +116,27 @@ func (gl *Guesser) identify(sample string, scripts []string) string {
 	Cyrillic := strings.Split("ru uk kk uz mn sr mk bg ky", " ")
 	Arabic := strings.Split("ar fa ps ur", " ")
 	Devanagari := strings.Split("hi ne", " ")
+
+	OtherLanguage := make(map[string]string)
+	OtherLanguage["Armenian"] = "hy"
+	OtherLanguage["Hebrew"] = "he"
+	OtherLanguage["Bengali"] = "bn"
+	OtherLanguage["Gurmukhi"] = "pa"
+	OtherLanguage["Greek"] = "el"
+	OtherLanguage["Gujarati"] = "gu"
+	OtherLanguage["Oriya"] = "or"
+	OtherLanguage["Tamil"] = "ta"
+	OtherLanguage["Telugu"] = "te"
+	OtherLanguage["Kannada"] = "kn"
+	OtherLanguage["Malayalam"] = "ml"
+	OtherLanguage["Sinhala"] = "si"
+	OtherLanguage["Thai"] = "th"
+	OtherLanguage["Lao"] = "lo"
+	OtherLanguage["Tibetan"] = "bo"
+	OtherLanguage["Burmese"] = "my"
+	OtherLanguage["Georgian"] = "ka"
+	OtherLanguage["Mongolian"] = "mn"
+	OtherLanguage["Khmer"] = "km"
 
 	if len(sample) < 3 {
 		return "UNKNOWN"
@@ -71,9 +150,6 @@ func (gl *Guesser) identify(sample string, scripts []string) string {
 	if in("Katakana", scripts) {
 		return "ja"
 	}
-	if in("CJK Unified Ideographs", scripts) || in("Bopomofo", scripts) || in("Bopomofo Extended", scripts) || in("KangXi Radicals", scripts) {
-		return "zh"
-	}
 	if in("Cyrillic", scripts) {
 		return gl.check(sample, Cyrillic)
 	}
@@ -83,42 +159,27 @@ func (gl *Guesser) identify(sample string, scripts []string) string {
 	if in("Devanagari", scripts) {
 		return gl.check(sample, Devanagari)
 	}
-	/*
-	   # Try languages with unique scripts
-	   for blockName, langName in SINGLETONS:
-	       if blockName in scripts:
-	           return langName
-	*/
+	if in("CJK Unified Ideographs", scripts) || in("Bopomofo", scripts) || in("Bopomofo Extended", scripts) || in("KangXi Radicals", scripts) {
+		return "zh"
+	}
+	for block, language := range OtherLanguage {
+		if in(block, scripts) {
+			return language
+		}
+	}
 
+	if in("Extended Latin", scripts) {
+		return gl.check(sample, ExtendedLatin)
+	}
 	if in("Latin Extended Additional", scripts) {
 		return "vi"
 	}
-	/*
-		if "Extended Latin" in scripts:
-			latinLang = check(sample, EXTENDED_LATIN)
-			if latinLang == "pt":
-				return check(sample, PT)
-			else:
-				return latinLang
-
-	*/
 	if in("Basic Latin", scripts) {
 		return gl.check(sample, Latin)
 	}
 	return "UNKNOWN"
 
 }
-
-/*
-
-
-
-
-
-
-
-   return UNKNOWN
-*/
 
 func (gl *Guesser) normalize(text string) string {
 	buffer := []byte(text)
@@ -155,14 +216,13 @@ func (gl *Guesser) findRuns(text string) []string {
 }
 
 // Parse ...
-func (gl *Guesser) Parse(text string) Language {
+func (gl *Guesser) Parse(text string) languageinfo.Language {
 	text = gl.normalize(text)
 	runs := gl.findRuns(text)
-	result := gl.identify(text, runs)
-
-	fmt.Print(result)
-
-	return Language{}
+	isocode := gl.identify(text, runs)
+	lang := languageinfo.Languages[isocode]
+	fmt.Println(lang)
+	return lang
 }
 
 func (gl *Guesser) loadTrigrams() {
@@ -203,9 +263,13 @@ func (gl *Guesser) loadTrigrams() {
 
 func main() {
 	x := GuessLanguage()
-	//z := x.Parse("目aНовинка! Благодаря сервису Google Мой бизнес вы можете бесплатно рассказать о себе клиентам с помощью Поиска Google, Google+ и Карт Google.")
-	z := x.Parse("漢")
-	fmt.Print("%v", z)
-	//fmt.Print(x.normalize("Uma  ①  frase em português"))
-	//fmt.Print(blocks.Data)
+	x.Parse("Pedras no caminho? Eu guardo todas. Um dia vou construir um castelo.")
+	x.Parse("Los siguientes tutoriales te darán las pautas principales para comenzar a utilizar el nuevo sistema.")
+	x.Parse("თქვენ შეგიძლიათ ისარგებლოთ რეგისტრაციის განახლებული ვებ გვერდით. Ge დომენების რეგისტრაცია, დომენური ")
+	x.Parse("Wir stellen für die Domainverwaltung ein automatisches elektronisches Registrierungssystem zur Verfügung und betreiben ein weltweites Netz von Nameservern, das sicherstellt, dass über 15 Millionen")
+	x.Parse("目aНовинка! Благодаря сервису Google Мой бизнес вы можете бесплатно рассказать о себе клиентам с помощью")
+	x.Parse("ᠮᠤᠩᠭᠤᠯᠤᠯᠤᠰ")
+	x.Parse("The easy way to start building Golang command line application.")
+	x.Parse("Uma  ①  frase em português")
+	x.Parse("できる限りわかりやすい説明を目指しておりますが、Cookie、IP アドレス、ピクセル タグ、ブラウザなどの用語がご不明の場合は、先にこれらの主な用語についての説明をご覧ください。Google ではお客様のプライバシーを重視しております")
 }
