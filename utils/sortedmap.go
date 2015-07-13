@@ -1,4 +1,4 @@
-package collections
+package utils
 
 // sort a map's keys in descending order of its values.
 

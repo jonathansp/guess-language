@@ -1,11 +1,11 @@
-package languageinfo
+package data
 
 type (
 	// Language ...
 	Language struct {
-		id      int
-		isocode string
-		name    string
+		ID      int
+		ISOcode string
+		Name    string
 	}
 )
 

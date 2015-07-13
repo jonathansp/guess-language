@@ -1,8 +1,43 @@
-package blocks
+package data
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 var (
+
+	//todo: FIX IT!
+	BasicLatin    = strings.Split("en ceb ha so tlh id haw la sw eu nr nso zu xh ss st tn ts", " ")
+	ExtendedLatin = strings.Split("cs af pl hr ro sk sl tr hu az et sq ca es fr de nl it da is nb sv fi lv pt ve lt tl cy", " ")
+	Latin         = append(BasicLatin, ExtendedLatin...)
+	Cyrillic      = strings.Split("ru uk kk uz mn sr mk bg ky", " ")
+	Arabic        = strings.Split("ar fa ps ur", " ")
+	Devanagari    = strings.Split("hi ne", " ")
+
+	OtherLanguage = map[string]string{
+		"Armenian":  "hy",
+		"Hebrew":    "he",
+		"Bengali":   "bn",
+		"Gurmukhi":  "pa",
+		"Greek":     "el",
+		"Gujarati":  "gu",
+		"Oriya":     "or",
+		"Tamil":     "ta",
+		"Telugu":    "te",
+		"Kannada":   "kn",
+		"Malayalam": "ml",
+		"Sinhala":   "si",
+		"Thai":      "th",
+		"Lao":       "lo",
+		"Tibetan":   "bo",
+		"Burmese":   "my",
+		"Georgian":  "ka",
+		"Mongolian": "mn",
+		"Khmer":     "km",
+	}
+
+	//=========
 	blockNames = []string{"Basic Latin",
 		"Basic Latin", "Latin-1 Supplement", "Latin-1 Supplement",
 		"Latin Extended-A",
