@@ -188,7 +188,7 @@ func findRuns(text string) []string {
 	return relevantRuns
 }
 
-// Parse a string in order to identify its natural language.
+// Parse function tries to identify natural language from a given string.
 func Parse(text string) (data.Language, error) {
 	text = normalize(text)
 	runs := findRuns(text)
