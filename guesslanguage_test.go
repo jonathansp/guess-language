@@ -66,7 +66,8 @@ func TestBigText(t *testing.T) {
 }
 
 func TestShortAndEmptyText(t *testing.T) {
-	short := "a" // impossible to identify
+	// impossible to identify
+	short := "a"
 	if _, err := Parse(short); err == nil {
 		t.Fatalf("Expected err, got nil.")
 	}
