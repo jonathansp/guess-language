@@ -27,5 +27,8 @@ func main () {
         lang, _ := guesslanguage.Parse("We know what we are, but know not what we may be.")
         fmt.Print(lang)
 }
-
 ```
+
+## Authors
+
+Jonathan Simon Prates (@jonathansp)
