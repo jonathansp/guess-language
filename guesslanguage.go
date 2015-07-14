@@ -1,6 +1,27 @@
 package guesslanguage
 
+/*  Guess the natural language (idiom) of a text.
+
+ 	2015, Jonathan Simon Prates.
+	Go library to identify the natural language of a text.
+
+    Based on guesslanguage.py by Kent S Johnson (https://pypi.python.org/pypi/guess-language)
+    Python version: 2008, Kent S Johnson
+    C++ version: 2006 Jacob R Rideout <kde@jacobrideout.net>
+    Perl version: 2004-6 Maciej Ceglowski
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU GENERAL PUBLIC LICENSE.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See LICENSE file for details.
+
+*/
+
 import (
+	"errors"
 	"math"
 	"strings"
 	"unicode"
@@ -15,19 +36,14 @@ const (
 	maxGrams  = 300
 )
 
-type (
-	//Guesser ...
-	Guesser struct {
-	}
+var (
+	//ErrUnknownLanguage throwns when Parse wasn't able to find an idiom.
+	ErrUnknownLanguage = errors.New("Unknown Language")
+	//ErrStringTooShort throwns if the string has 3 chars or less.
+	ErrStringTooShort = errors.New("String too short")
 )
 
-// GuessLanguage ...
-func GuessLanguage() *Guesser {
-	instance := Guesser{}
-	return &instance
-}
-
-func (gl *Guesser) createModel(content string) []string {
+func createModel(content string) []string {
 	trigrams := make(map[string]int)
 	content = strings.ToLower(content)
 	for i := 0; i <= len(content)-2; i++ {
@@ -35,8 +51,7 @@ func (gl *Guesser) createModel(content string) []string {
 		if end > len(content) {
 			end = len(content) - 1
 		}
-		_, ok := trigrams[content[i:end]]
-		if !ok {
+		if _, ok := trigrams[content[i:end]]; !ok {
 			trigrams[content[i:end]] = 0
 		}
 		trigrams[content[i:end]]++
@@ -46,16 +61,15 @@ func (gl *Guesser) createModel(content string) []string {
 		data = append(data, res)
 	}
 	return data
-
 }
 
-func (gl *Guesser) distance(foundModels []string, knownModel map[string]int) float64 {
+func distance(foundModels []string, knownModel map[string]int) float64 {
 	var dist float64
 	if len(foundModels) > maxGrams {
 		foundModels = foundModels[:maxGrams]
 	}
-
 	for i, value := range foundModels {
+		// must ignore samples with 2 spaces in a row.
 		if !strings.Contains(value, "  ") {
 			if _, ok := knownModel[value]; ok {
 				dist += math.Abs(float64(i - knownModel[value]))
@@ -67,89 +81,95 @@ func (gl *Guesser) distance(foundModels []string, knownModel map[string]int) flo
 	return dist
 }
 
-func (gl *Guesser) check(sample string, languageSet []string) string {
-	if len(sample) < minLength {
-		return "UNKNOWN"
-	}
-	model := gl.createModel(sample)
+func check(sample string, languageSet []string) (string, error) {
+	model := createModel(sample)
 	minDistance := math.Inf(1)
-	lastLang := "UNKNOWN"
+	var lastLang string
 	for _, lang := range languageSet {
 		lang := strings.ToLower(lang)
 		if value, ok := data.Trigrams[lang]; ok {
-			distance := gl.distance(model, value)
+			distance := distance(model, value)
 			if distance < minDistance {
 				minDistance = distance
 				lastLang = lang
 			}
 		}
 	}
-	return lastLang
+	if lastLang == "" {
+		return "", ErrUnknownLanguage
+	}
+	return lastLang, nil
 }
 
-func (gl *Guesser) identify(sample string, scripts []string) string {
+func identify(sample string, scripts []string) (string, error) {
+	if len(sample) < minLength {
+		return "", ErrStringTooShort
+	}
 
-	if len(sample) < 3 {
-		return "UNKNOWN"
+	switch {
+
+	case utils.HasOne([]string{"Hangul Syllables", "Hangul Jamo",
+		"Hangul Compatibility Jamo", "Hangul"}, scripts):
+		return "ko", nil
+
+	case utils.In("Greek and Coptic", scripts):
+		return "el", nil
+
+	case utils.In("Katakana", scripts):
+		return "ja", nil
+
+	case utils.In("Cyrillic", scripts):
+		return check(sample, data.Cyrillic)
+
+	case utils.HasOne([]string{"Arabic", "Arabic Presentation Forms-A",
+		"Arabic Presentation Forms-B"}, scripts):
+		return check(sample, data.Arabic)
+
+	case utils.In("Devanagari", scripts):
+		return check(sample, data.Devanagari)
+
+	case utils.HasOne([]string{"CJK Unified Ideographs", "Bopomofo",
+		"Bopomofo Extended", "KangXi Radicals"}, scripts):
+		return "zh", nil
 	}
-	if utils.In("Hangul Syllables", scripts) || utils.In("Hangul Jamo", scripts) || utils.In("Hangul Compatibility Jamo", scripts) || utils.In("Hangul", scripts) {
-		return "ko"
-	}
-	if utils.In("Greek and Coptic", scripts) {
-		return "el"
-	}
-	if utils.In("Katakana", scripts) {
-		return "ja"
-	}
-	if utils.In("Cyrillic", scripts) {
-		return gl.check(sample, data.Cyrillic)
-	}
-	if utils.In("Arabic", scripts) || utils.In("Arabic Presentation Forms-A", scripts) || utils.In("Arabic Presentation Forms-B", scripts) {
-		return gl.check(sample, data.Arabic)
-	}
-	if utils.In("Devanagari", scripts) {
-		return gl.check(sample, data.Devanagari)
-	}
-	if utils.In("CJK Unified Ideographs", scripts) || utils.In("Bopomofo", scripts) || utils.In("Bopomofo Extended", scripts) || utils.In("KangXi Radicals", scripts) {
-		return "zh"
-	}
+
 	for block, language := range data.OtherLanguage {
 		if utils.In(block, scripts) {
-			return language
+			return language, nil
 		}
 	}
 
-	if utils.In("Extended Latin", scripts) {
-		return gl.check(sample, data.ExtendedLatin)
-	}
-	if utils.In("Latin Extended Additional", scripts) {
-		return "vi"
-	}
-	if utils.In("Basic Latin", scripts) {
-		return gl.check(sample, data.Latin)
-	}
-	return "UNKNOWN"
+	switch {
 
+	case utils.In("Extended Latin", scripts):
+		return check(sample, data.ExtendedLatin)
+
+	case utils.In("Latin Extended Additional", scripts):
+		return "vi", nil
+
+	case utils.In("Basic Latin", scripts):
+		return check(sample, data.Latin)
+
+	}
+
+	return "", ErrUnknownLanguage
 }
 
-func (gl *Guesser) normalize(text string) string {
+func normalize(text string) string {
 	buffer := []byte(text)
 	buffer = norm.NFKC.Bytes(buffer)
 	text = strings.Replace(string(buffer), "  ", " ", -1)
 	return text
 }
 
-func (gl *Guesser) findRuns(text string) []string {
-
+func findRuns(text string) []string {
 	var runTypes = make(map[string]int)
 	var relevantRuns []string
 	var totalCount = 0
-
 	for _, char := range text {
 		if unicode.IsLetter(char) {
 			block := data.GetBlock(char)
-			_, ok := runTypes[block]
-			if !ok {
+			if _, ok := runTypes[block]; !ok {
 				runTypes[block] = 0
 			}
 			runTypes[block] = +1
@@ -159,18 +179,19 @@ func (gl *Guesser) findRuns(text string) []string {
 
 	for key, value := range runTypes {
 		percent := (value * 100) / totalCount
-		if percent >= 40 || (key == "Basic Latin" && percent >= 15) || (key == "Latin Extended Additional" && percent >= 10) {
+		if percent >= 40 ||
+			(key == "Basic Latin" && percent >= 15) ||
+			(key == "Latin Extended Additional" && percent >= 10) {
 			relevantRuns = append(relevantRuns, key)
 		}
 	}
 	return relevantRuns
 }
 
-// Parse ...
-func (gl *Guesser) Parse(text string) data.Language {
-	text = gl.normalize(text)
-	runs := gl.findRuns(text)
-	isocode := gl.identify(text, runs)
-	lang := data.Languages[isocode]
-	return lang
+// Parse a string in order to identify its natural language.
+func Parse(text string) (data.Language, error) {
+	text = normalize(text)
+	runs := findRuns(text)
+	isocode, err := identify(text, runs)
+	return data.Languages[isocode], err
 }

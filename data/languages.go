@@ -1,15 +1,19 @@
 package data
 
 type (
-	// Language ...
+	// Language represents an idiom.
 	Language struct {
-		ID      int
+		// ID means IANA code.
+		ID int
+		// ISOCode means ISO 639-1 two-letter codes
 		ISOcode string
-		Name    string
+		// Language Name.
+		Name string
 	}
 )
 
-//Languages
+// Languages is a map with all supported idioms.
+// Each one has IANA code, ISO code and Name.
 var Languages = map[string]Language{
 	"ab":    Language{12026, "ab", "Abkhazian"},
 	"af":    Language{40, "af", "Afrikaans"},
