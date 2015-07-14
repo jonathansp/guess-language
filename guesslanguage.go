@@ -63,12 +63,12 @@ func createModel(content string) []string {
 	return data
 }
 
-func distance(foundModels []string, knownModel map[string]int) float64 {
+func distance(foundModel []string, knownModel map[string]int) float64 {
 	var dist float64
-	if len(foundModels) > maxGrams {
-		foundModels = foundModels[:maxGrams]
+	if len(foundModel) > maxGrams {
+		foundModel = foundModel[:maxGrams]
 	}
-	for i, value := range foundModels {
+	for i, value := range foundModel {
 		// must ignore samples with 2 spaces in a row.
 		if !strings.Contains(value, "  ") {
 			if _, ok := knownModel[value]; ok {
@@ -119,22 +119,22 @@ func identify(sample string, scripts []string) (string, error) {
 		return "ja", nil
 
 	case utils.In("Cyrillic", scripts):
-		return check(sample, data.Cyrillic)
+		return check(sample, data.Alphabets["Cyrillic"])
 
 	case utils.HasOne([]string{"Arabic", "Arabic Presentation Forms-A",
 		"Arabic Presentation Forms-B"}, scripts):
-		return check(sample, data.Arabic)
+		return check(sample, data.Alphabets["Arabic"])
 
 	case utils.In("Devanagari", scripts):
-		return check(sample, data.Devanagari)
+		return check(sample, data.Alphabets["Devanagari"])
 
 	case utils.HasOne([]string{"CJK Unified Ideographs", "Bopomofo",
 		"Bopomofo Extended", "KangXi Radicals"}, scripts):
 		return "zh", nil
 	}
 
-	// We need to check OtherLanguage before Latin.
-	for block, language := range data.OtherLanguage {
+	// We need to check LocalLanguage (specific idioms) before checking Latin.
+	for block, language := range data.LocalLanguages {
 		if utils.In(block, scripts) {
 			return language, nil
 		}
@@ -143,14 +143,13 @@ func identify(sample string, scripts []string) (string, error) {
 	switch {
 
 	case utils.In("Extended Latin", scripts):
-		return check(sample, data.ExtendedLatin)
+		return check(sample, data.Alphabets["ExtendedLatin"])
 
 	case utils.In("Latin Extended Additional", scripts):
 		return "vi", nil
 
 	case utils.In("Basic Latin", scripts):
-		return check(sample, data.Latin)
-
+		return check(sample, data.Alphabets["Latin"])
 	}
 
 	return "", ErrUnknownLanguage
@@ -169,7 +168,7 @@ func findRuns(text string) []string {
 	var totalCount = 0
 	for _, char := range text {
 		if unicode.IsLetter(char) {
-			block := data.GetBlock(char)
+			block := data.GetBlockFromChar(char)
 			if _, ok := runTypes[block]; !ok {
 				runTypes[block] = 0
 			}
@@ -193,6 +192,9 @@ func findRuns(text string) []string {
 func Parse(text string) (data.Language, error) {
 	text = normalize(text)
 	runs := findRuns(text)
+	if len(runs) == 0 {
+		return data.Languages[""], ErrUnknownLanguage
+	}
 	isocode, err := identify(text, runs)
 	return data.Languages[isocode], err
 }

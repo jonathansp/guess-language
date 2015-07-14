@@ -53,10 +53,22 @@ func TestUnnormalizedChars(t *testing.T) {
 }
 
 func TestMixedChars(t *testing.T) {
-	other := "ます შეგიძლიათ рассказать" //ru is bigger
+	other := "შეგიძლიათ рассказать рассказать "
 	if lang, _ := Parse(other); lang.ISOcode != "ru" {
 		t.Fatalf("Expected ru, got %s.", lang.ISOcode)
 	}
+}
+
+func TestNumbersAndSpaces(t *testing.T) {
+	numbers := "1234567890"
+	if _, err := Parse(numbers); err == nil {
+		t.Fatalf("Expected err, got nil.")
+	}
+	spaces := "           "
+	if _, err := Parse(spaces); err == nil {
+		t.Fatalf("Expected err, got nil.")
+	}
+
 }
 
 func TestBigText(t *testing.T) {
