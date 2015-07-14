@@ -37,9 +37,9 @@ const (
 )
 
 var (
-	//ErrUnknownLanguage throwns when Parse wasn't able to find an idiom.
+	//ErrUnknownLanguage returns when Parse() wasn't able to find an idiom.
 	ErrUnknownLanguage = errors.New("Unknown Language")
-	//ErrStringTooShort throwns if the string has 3 chars or less.
+	//ErrStringTooShort returns if string has 3 chars or less.
 	ErrStringTooShort = errors.New("String too short")
 )
 
