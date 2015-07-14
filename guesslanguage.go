@@ -27,7 +27,7 @@ import (
 	"unicode"
 
 	"github.com/jonathansp/guess-language/data"
-	"github.com/jonathansp/guess-language/utils"
+	arrays "github.com/jonathansp/guess-language/utils"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -57,7 +57,7 @@ func createModel(content string) []string {
 		trigrams[content[i:end]]++
 	}
 	var data []string
-	for _, res := range utils.SortedKeys(trigrams) {
+	for _, res := range arrays.SortedKeys(trigrams) {
 		data = append(data, res)
 	}
 	return data
@@ -108,47 +108,47 @@ func identify(sample string, scripts []string) (string, error) {
 
 	switch {
 
-	case utils.HasOne([]string{"Hangul Syllables", "Hangul Jamo",
+	case arrays.HasOne([]string{"Hangul Syllables", "Hangul Jamo",
 		"Hangul Compatibility Jamo", "Hangul"}, scripts):
 		return "ko", nil
 
-	case utils.In("Greek and Coptic", scripts):
+	case arrays.In("Greek and Coptic", scripts):
 		return "el", nil
 
-	case utils.In("Katakana", scripts):
+	case arrays.In("Katakana", scripts):
 		return "ja", nil
 
-	case utils.In("Cyrillic", scripts):
+	case arrays.In("Cyrillic", scripts):
 		return check(sample, data.Alphabets["Cyrillic"])
 
-	case utils.HasOne([]string{"Arabic", "Arabic Presentation Forms-A",
+	case arrays.HasOne([]string{"Arabic", "Arabic Presentation Forms-A",
 		"Arabic Presentation Forms-B"}, scripts):
 		return check(sample, data.Alphabets["Arabic"])
 
-	case utils.In("Devanagari", scripts):
+	case arrays.In("Devanagari", scripts):
 		return check(sample, data.Alphabets["Devanagari"])
 
-	case utils.HasOne([]string{"CJK Unified Ideographs", "Bopomofo",
+	case arrays.HasOne([]string{"CJK Unified Ideographs", "Bopomofo",
 		"Bopomofo Extended", "KangXi Radicals"}, scripts):
 		return "zh", nil
 	}
 
 	// We need to check LocalLanguage (specific idioms) before checking Latin.
 	for block, language := range data.LocalLanguages {
-		if utils.In(block, scripts) {
+		if arrays.In(block, scripts) {
 			return language, nil
 		}
 	}
 
 	switch {
 
-	case utils.In("Extended Latin", scripts):
+	case arrays.In("Extended Latin", scripts):
 		return check(sample, data.Alphabets["ExtendedLatin"])
 
-	case utils.In("Latin Extended Additional", scripts):
+	case arrays.In("Latin Extended Additional", scripts):
 		return "vi", nil
 
-	case utils.In("Basic Latin", scripts):
+	case arrays.In("Basic Latin", scripts):
 		return check(sample, data.Alphabets["Latin"])
 	}
 
