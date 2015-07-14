@@ -1,7 +1,7 @@
 package data
 
 var (
-	//Trigrams ...
+	//Trigrams database
 	Trigrams map[string]map[string]int
 )
 

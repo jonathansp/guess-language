@@ -1,6 +1,7 @@
 package utils
 
 // sort a map's keys in descending order of its values.
+// Author : ikbear <https://gist.github.com/ikbear/4038654>
 
 import "sort"
 
@@ -21,13 +22,12 @@ func (sm *sortedMap) Swap(i, j int) {
 	sm.s[i], sm.s[j] = sm.s[j], sm.s[i]
 }
 
-// SortedKeys ...
 func SortedKeys(m map[string]int) []string {
 	sm := new(sortedMap)
 	sm.m = m
 	sm.s = make([]string, len(m))
 	i := 0
-	for key, _ := range m {
+	for key := range m {
 		sm.s[i] = key
 		i++
 	}

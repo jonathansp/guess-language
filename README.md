@@ -16,12 +16,16 @@ import "github.com/jonathansp/guess-language"
 
 ## Usage
 ```go
+package main
+
 import (
     "fmt"
-	"github.com/jonathansp/guess-language"
+    "github.com/jonathansp/guess-language"
 )
 
-lang := guesslanguage.Parse("We know what we are, but know not what we may be.")
-fmt.Print(lang)
+func main () {
+        lang, _ := guesslanguage.Parse("We know what we are, but know not what we may be.")
+        fmt.Print(lang)
+}
 
 ```

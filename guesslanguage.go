@@ -133,6 +133,7 @@ func identify(sample string, scripts []string) (string, error) {
 		return "zh", nil
 	}
 
+	// We need to check OtherLanguage before Latin.
 	for block, language := range data.OtherLanguage {
 		if utils.In(block, scripts) {
 			return language, nil
