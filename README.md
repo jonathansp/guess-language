@@ -1,5 +1,5 @@
 # guess-language [![Build Status](https://travis-ci.org/jonathansp/guess-language.svg?branch=master)](https://travis-ci.org/jonathansp/guess-language) [![GoDoc](https://godoc.org/github.com/jonathansp/guess-language?status.svg)](http://godoc.org/github.com/jonathansp/guess-language)
-Guess text natural language (idiom).
+Guess the natural language of a text (idiom).
 
 
 ## Install
