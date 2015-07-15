@@ -21,7 +21,7 @@ func init() {
 		"sw", "eu", "nr", "nso", "zu", "xh", "ss", "st", "tn", "ts"}
 
 	Alphabets["ExtendedLatin"] = []string{"cs", "af", "pl", "hr", "ro", "sk", "sl", "tr",
-		"hu", "az", "et", "sq", "ca", "es", "fr", "de", "nl", "it", "da", "is", "nb", "sv",
+		"hu", "az", "et", "sq", "ca", "es", "fr", "de", "nl", "it", "da", "is", "no", "sv",
 		"fi", "lv", "pt", "ve", "lt", "tl", "cy"}
 
 	Alphabets["Cyrillic"] = []string{"ru", "uk", "kk", "uz", "mn", "sr", "mk", "bg", "ky"}

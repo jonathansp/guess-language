@@ -2,46 +2,55 @@ package guesslanguage
 
 import "testing"
 
-const (
-	// Phrases from internet.
-	pt  = "Pedras no caminho? Eu guardo todas. Um dia vou construir um castelo."
-	es  = "Los siguientes tutoriales te darán las pautas principales para comenzar a utilizar el nuevo sistema."
-	ka  = "თქვენ შეგიძლიათ ისარგებლოთ რეგისტრაციის განახლებული ვებ გვერდით. Ge დომენების რეგისტრაცია, დომენური "
-	de  = "Wir stellen für die Domainverwaltung ein automatisches elektronisches Registrierungssystem zur Verfügung und betreiben ein weltweites Netz von Nameservern, das sicherstellt, dass über 15 Millionen"
-	ru  = "овинка! Благодаря сервису Google Мой бизнес вы можете бесплатно рассказать о себе клиентам с помощью"
-	en  = "The easy way to start building Golang command line application."
-	mn  = "ᠮᠤᠩᠭᠤᠯᠤᠯᠤᠰ"
-	ja  = "できる限りわかりやすい説明を目指しておりますが、Cookie、IP アドレス、ピクセル タグ、ブラウザなどの用語がご不明の場合は、先にこれらの主な用語についての説明をご覧ください。Google ではお客様のプライバシーを重視しており"
-	big = `It was a few minutes of eleven o’clock at night. One of the many editions of the great New York Herald had just gone to press. But in the big, half-lit room where editors, copy readers, reporters and telegraph operators were busy on the later editions to follow, there was no let-up in the work of making a world-known newspaper.
-There was the noise of many persons working swiftly; the staccato of typewriters, the drone of telegraph sounders and now and then the sharp inquiry of some bent-over copy reader as he struggled to turn reportorial inexperience into a finished story. But there was no confusion and none of the wild rush and clatter that fiction uses in describing newspaper offices; copy boys were not dashing in all directions and the floor was not knee deep with newspapers and print paper.
-Calmest of all was the night city editor. With a mind full of the work already done and in progress, he was as alert mentally as if he had just reached his desk. Five hours yet remained in which New York had to be watched; five hours, in any one minute of which the biggest news on hand might fade into nothing in the face of the one big story that every editor waits for night after night. And the night city editor, knowing this, dropped his half-lit pipe when his desk telephone buzzed.`
-)
+var sentences = map[string]string{
+	"en": "This is a test of the language checker",
+	"fr": "Verifions que le détecteur de langues marche",
+	"pl": "Sprawdźmy, czy odgadywacz języków pracuje",
+	"ru": "авай проверить  узнает ли наш угадатель русски язык",
+	"es": "La respuesta de los acreedores a la oferta argentina para salir del default no ha sido muy positiv",
+	"kk": "Сайлау Сайлау нәтижесінде дауыстардың басым бөлігін ел премьер министрі Виктор Янукович пен оның қарсыласы, оппозиция жетекшісі Виктор Ющенко алды.",
+	"uz": "милиция ва уч солиқ идораси ходимлари яраланган. Шаҳарда хавфсизлик чоралари кучайтирилган.",
+	"ky": "көрбөгөндөй элдик толкундоо болуп, Кокон шаарынын көчөлөрүндө бир нече миң киши нааразылык билдирди.",
+	"tr": "yakın tarihin en çekişmeli başkanlık seçiminde oy verme işlemi sürerken, katılımda rekor bekleniyor.",
+	"az": "Daxil olan xəbərlərdə deyilir ki, 6 nəfər Bağdadın mərkəzində yerləşən Təhsil Nazirliyinin binası yaxınlığında baş vermiş partlayış zamanı həlak olub.",
+	"ar": " ملايين الناخبين الأمريكيين يدلون بأصواتهم وسط إقبال قياسي على انتخابات هي الأشد تنافسا منذ عقود",
+	"uk": "Американське суспільство, поділене суперечностями, збирається взяти активну участь у голосуванні",
+	"cs": "Francouzský ministr financí zmírnil výhrady vůči nízkým firemním daním v nových členských státech EU",
+	"hr": "biće prilično izjednačena, sugerišu najnovije ankete. Oba kandidata tvrde da su sposobni da dobiju rat protiv terorizma",
+	"bg": " е готов да даде гаранции, че няма да прави ядрено оръжие, ако му се разреши мирна атомна програма",
+	"mk": "на јавното мислење покажуваат дека трката е толку тесна, што се очекува двајцата соперници да ја прекршат традицијата и да се појават и на самиот изборен ден.",
+	"ro": "în acest sens aparţinînd Adunării Generale a organizaţiei, în ciuda faptului că mai multe dintre solicitările organizaţiei privind organizarea scrutinului nu au fost soluţionate",
+	"sq": "kaluan ditën e fundit të fushatës në shtetet kryesore për të siguruar sa më shumë votues.",
+	"el": "αναμένεται να σπάσουν παράδοση δεκαετιών και να συνεχίσουν την εκστρατεία τους ακόμη και τη μέρα των εκλογών",
+	"zh": " 美国各州选民今天开始正式投票。据信，",
+	"nl": " Die kritiek was volgens hem bitter hard nodig, omdat Nederland binnen een paar jaar in een soort Belfast zou dreigen te veranderen",
+	"da": "På denne side bringer vi billeder fra de mange forskellige forberedelser til arrangementet, efterhånden som vi får dem ",
+	"sv": "Vi säger att Frälsningen är en gåva till alla, fritt och för intet.  Men som vi nämnt så finns det två villkor som måste",
+	"fi": "on julkishallinnon verkkopalveluiden yhteinen osoite. Kansalaisten arkielämää helpottavaa tietoa on koottu eri aihealueisiin",
+	"et": "Ennetamaks reisil ebameeldivaid vahejuhtumeid vii end kurssi reisidokumentide ja viisade reeglitega ning muu praktilise informatsiooniga",
+	"hu": "Hiába jön létre az önkéntes magyar haderő, hiába nem lesz többé bevonulás, változatlanul fennmarad a hadkötelezettség intézménye",
+	"hy": "հարաբերական",
+	"vi": "Hai vấn đề khó chịu với màn hình thường gặp nhất khi bạn dùng laptop là vết trầy xước và điểm chết. Sau đây là vài cách xử lý chú",
+	"ja": "トヨタ自動車、フィリピンの植林活動で第三者認証取得　トヨタ自動車(株)（以下、トヨタ）は、2007年９月よりフィリピンのルソン島北部に位置するカガヤン州ペニャブラン",
+	"mn": "ᠮᠤᠩᠭᠤᠯᠤᠯᠤᠰ",
+	"pt": "Pedras no caminho? Eu guardo todas. Um dia vou construir um castelo.",
+	"no": "Tjenestene er svært varierte, og derfor kan også ytterligere vilkår eller produktkrav (herunder alderskrav) gjelde for hver enkelt tjeneste.",
+}
+
+func TestOneLanguage(t *testing.T) {
+	code := "pt"
+	sentence := sentences[code]
+	if lang, err := Parse(sentence); lang.ISOcode != code {
+		t.Fatalf("Expected %s, got %s. Sentence: %s\n%s", code, lang.ISOcode, sentence, err)
+	}
+
+}
 
 func TestCommonLanguages(t *testing.T) {
-
-	if lang, _ := Parse(pt); lang.ISOcode != "pt" {
-		t.Fatalf("Expected pt, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(es); lang.ISOcode != "es" {
-		t.Fatalf("Expected es, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(ka); lang.ISOcode != "ka" {
-		t.Fatalf("Expected ka, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(de); lang.ISOcode != "de" {
-		t.Fatalf("Expected de, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(ru); lang.ISOcode != "ru" {
-		t.Fatalf("Expected ru, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(en); lang.ISOcode != "en" {
-		t.Fatalf("Expected en, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(mn); lang.ISOcode != "mn" {
-		t.Fatalf("Expected mn, got %s.", lang.ISOcode)
-	}
-	if lang, _ := Parse(ja); lang.ISOcode != "ja" {
-		t.Fatalf("Expected ja, got %s.", lang.ISOcode)
+	for code, sentence := range sentences {
+		if lang, _ := Parse(sentence); lang.ISOcode != code {
+			t.Fatalf("Expected %s, got %s. Sentence: %s", code, lang.ISOcode, sentence)
+		}
 	}
 }
 
@@ -69,12 +78,6 @@ func TestNumbersAndSpaces(t *testing.T) {
 		t.Fatalf("Expected err, got nil.")
 	}
 
-}
-
-func TestBigText(t *testing.T) {
-	if lang, _ := Parse(big + big + big); lang.ISOcode != "en" {
-		t.Fatalf("Expected en, got %s.", lang.ISOcode)
-	}
 }
 
 func TestShortAndEmptyText(t *testing.T) {

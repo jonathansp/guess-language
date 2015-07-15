@@ -1,4 +1,4 @@
-package utils
+package collections
 
 // sort a map's keys in descending order of its values.
 // Author : ikbear <https://gist.github.com/ikbear/4038654>

@@ -23,11 +23,13 @@ package guesslanguage
 import (
 	"errors"
 	"math"
+	"sort"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
+	"github.com/jonathansp/guess-language/collections"
 	"github.com/jonathansp/guess-language/data"
-	arrays "github.com/jonathansp/guess-language/utils"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -46,21 +48,16 @@ var (
 func createModel(content string) []string {
 	trigrams := make(map[string]int)
 	content = strings.ToLower(content)
-	for i := 0; i <= len(content)-2; i++ {
+	size := utf8.RuneCountInString(content)
+	for i := 0; i <= size-2; i++ {
 		end := i + 3
-		if end > len(content) {
-			end = len(content) - 1
+		if end > size {
+			end = size - 1
 		}
-		if _, ok := trigrams[content[i:end]]; !ok {
-			trigrams[content[i:end]] = 0
-		}
-		trigrams[content[i:end]]++
+		slice := string([]rune(content)[i:end])
+		trigrams[slice]++
 	}
-	var data []string
-	for _, res := range arrays.SortedKeys(trigrams) {
-		data = append(data, res)
-	}
-	return data
+	return collections.SortedKeys(trigrams)
 }
 
 func distance(foundModel []string, knownModel map[string]int) float64 {
@@ -82,6 +79,7 @@ func distance(foundModel []string, knownModel map[string]int) float64 {
 }
 
 func check(sample string, languageSet []string) (string, error) {
+
 	model := createModel(sample)
 	minDistance := math.Inf(1)
 	var lastLang string
@@ -101,54 +99,67 @@ func check(sample string, languageSet []string) (string, error) {
 	return lastLang, nil
 }
 
-func identify(sample string, scripts []string) (string, error) {
+func hasOne(items []string, sortedList sort.StringSlice) bool {
+
+	for _, item := range items {
+		i := sort.SearchStrings(sortedList, item)
+		if i < len(sortedList) && sortedList[i] == item {
+			return true
+		}
+	}
+	return false
+}
+
+func identify(sample string, scripts sort.StringSlice) (string, error) {
 	if len(sample) < minLength {
 		return "", ErrStringTooShort
 	}
 
+	sort.Strings(scripts)
+
 	switch {
 
-	case arrays.HasOne([]string{"Hangul Syllables", "Hangul Jamo",
+	case hasOne([]string{"Hangul Syllables", "Hangul Jamo",
 		"Hangul Compatibility Jamo", "Hangul"}, scripts):
 		return "ko", nil
 
-	case arrays.In("Greek and Coptic", scripts):
+	case hasOne([]string{"Greek and Coptic"}, scripts):
 		return "el", nil
 
-	case arrays.In("Katakana", scripts):
+	case hasOne([]string{"Katakana"}, scripts):
 		return "ja", nil
 
-	case arrays.In("Cyrillic", scripts):
+	case hasOne([]string{"Cyrillic"}, scripts):
 		return check(sample, data.Alphabets["Cyrillic"])
 
-	case arrays.HasOne([]string{"Arabic", "Arabic Presentation Forms-A",
+	case hasOne([]string{"Arabic", "Arabic Presentation Forms-A",
 		"Arabic Presentation Forms-B"}, scripts):
 		return check(sample, data.Alphabets["Arabic"])
 
-	case arrays.In("Devanagari", scripts):
+	case hasOne([]string{"Devanagari"}, scripts):
 		return check(sample, data.Alphabets["Devanagari"])
 
-	case arrays.HasOne([]string{"CJK Unified Ideographs", "Bopomofo",
+	case hasOne([]string{"CJK Unified Ideographs", "Bopomofo",
 		"Bopomofo Extended", "KangXi Radicals"}, scripts):
 		return "zh", nil
 	}
 
 	// We need to check LocalLanguage (specific idioms) before checking Latin.
 	for block, language := range data.LocalLanguages {
-		if arrays.In(block, scripts) {
+		if hasOne([]string{block}, scripts) {
 			return language, nil
 		}
 	}
 
 	switch {
 
-	case arrays.In("Extended Latin", scripts):
-		return check(sample, data.Alphabets["ExtendedLatin"])
-
-	case arrays.In("Latin Extended Additional", scripts):
+	case hasOne([]string{"Latin Extended Additional"}, scripts):
 		return "vi", nil
 
-	case arrays.In("Basic Latin", scripts):
+	case hasOne([]string{"Extended Latin"}, scripts):
+		return check(sample, data.Alphabets["ExtendedLatin"])
+
+	case hasOne([]string{"Basic Latin"}, scripts):
 		return check(sample, data.Alphabets["Latin"])
 	}
 
@@ -164,14 +175,11 @@ func normalize(text string) string {
 
 func findRuns(text string) []string {
 	var runTypes = make(map[string]int)
-	var relevantRuns []string
+	var relevantRuns sort.StringSlice
 	var totalCount = 0
 	for _, char := range text {
 		if unicode.IsLetter(char) {
 			block := data.GetBlockFromChar(char)
-			if _, ok := runTypes[block]; !ok {
-				runTypes[block] = 0
-			}
 			runTypes[block] = +1
 			totalCount = +1
 		}
