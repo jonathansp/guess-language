@@ -53,7 +53,7 @@ func TestParseFunction(t *testing.T) {
 	for _, tt := range parseTests {
 		lang, err := Parse(tt.in)
 		if lang.ISOcode != tt.outCode || err != tt.outErr {
-			t.Errorf("Parse(%q): have: (%q, %v) want: (%q, %v)", tt.in, lang.ISOcode, err, tt.outCode, tt.outErr)
+			t.Errorf("Parse(%q): have: (%q, %v) expected: (%q, %v)", tt.in, lang.ISOcode, err, tt.outCode, tt.outErr)
 		}
 	}
 }

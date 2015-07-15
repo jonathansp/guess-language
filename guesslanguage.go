@@ -28,7 +28,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/jonathansp/guess-language/collections"
 	"github.com/jonathansp/guess-language/data"
 	"golang.org/x/text/unicode/norm"
 )
@@ -57,14 +56,17 @@ func createModel(content string) []string {
 		slice := string([]rune(content)[i:end])
 		trigrams[slice]++
 	}
-	return collections.SortedKeys(trigrams)
+	var values []string
+	for key := range trigrams {
+		values = append(values, key)
+	}
+	// possible overflow with big strings.
+	sort.Strings(values)
+	return values
 }
 
 func distance(foundModel []string, knownModel map[string]int) float64 {
 	var dist float64
-	if len(foundModel) > maxGrams {
-		foundModel = foundModel[:maxGrams]
-	}
 	for i, value := range foundModel {
 		// must ignore samples with 2 spaces in a row.
 		if !strings.Contains(value, "  ") {
@@ -83,7 +85,6 @@ func check(sample string, languageSet []string) (string, error) {
 	minDistance := math.Inf(1)
 	var lastLang string
 	for _, lang := range languageSet {
-		lang := strings.ToLower(lang)
 		if value, ok := data.Trigrams[lang]; ok {
 			distance := distance(model, value)
 			if distance < minDistance {
