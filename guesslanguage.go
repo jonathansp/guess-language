@@ -100,7 +100,7 @@ func check(sample string, languageSet []string) (string, error) {
 }
 
 func hasOne(items []string, sortedList sort.StringSlice) bool {
-
+	// change to a map for O(1) ?
 	for _, item := range items {
 		i := sort.SearchStrings(sortedList, item)
 		if i < len(sortedList) && sortedList[i] == item {
