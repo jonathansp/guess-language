@@ -9673,7 +9673,7 @@ func init() {
 		"лэл": 299,
 	}
 
-	Trigrams["nb"] = map[string]int{"er ": 0,
+	Trigrams["no"] = map[string]int{"er ": 0,
 		"en ": 1,
 		"et ": 2,
 		" de": 3,
