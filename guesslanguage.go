@@ -39,9 +39,9 @@ const (
 )
 
 var (
-	//ErrUnknownLanguage returns when Parse() wasn't able to find an idiom.
+	//ErrUnknownLanguage happens when Parse() wasn't able to find an idiom.
 	ErrUnknownLanguage = errors.New("Unknown Language")
-	//ErrStringTooShort returns if string has 3 chars or less.
+	//ErrStringTooShort happens when given string has 3 chars or less.
 	ErrStringTooShort = errors.New("String too short")
 )
 
@@ -79,7 +79,6 @@ func distance(foundModel []string, knownModel map[string]int) float64 {
 }
 
 func check(sample string, languageSet []string) (string, error) {
-
 	model := createModel(sample)
 	minDistance := math.Inf(1)
 	var lastLang string
