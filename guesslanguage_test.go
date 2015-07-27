@@ -10,7 +10,7 @@ var parseTests = []struct {
 	{"en", nil, "This is a test of the language checker"},
 	{"fr", nil, "Verifions que le détecteur de langues marche"},
 	{"pl", nil, "Sprawdźmy, czy odgadywacz języków pracuje"},
-	{"ru", nil, "авай проверить  узнает ли наш угадатель русски язык"},
+	{"ru", nil, "Давайте проверим, распознает ли программа русский язык?"},
 	{"es", nil, "La respuesta de los acreedores a la oferta argentina para salir del default no ha sido muy positiv"},
 	{"kk", nil, "Сайлау Сайлау нәтижесінде дауыстардың басым бөлігін ел премьер министрі Виктор Янукович пен оның қарсыласы, оппозиция жетекшісі Виктор Ющенко алды."},
 	{"uz", nil, "милиция ва уч солиқ идораси ходимлари яраланган. Шаҳарда хавфсизлик чоралари кучайтирилган."},
