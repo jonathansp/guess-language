@@ -11,7 +11,7 @@ package guesslanguage
     Perl version: 2004-6 Maciej Ceglowski
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU GENERAL PUBLIC LICENSE.
+    modify it under the terms of the LGPL (http://www.gnu.org/licenses/lgpl-3.0.html).
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
