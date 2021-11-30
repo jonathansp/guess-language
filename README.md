@@ -1,5 +1,10 @@
-# guess-language [![Build Status](https://travis-ci.org/jonathansp/guess-language.svg?branch=master)](https://travis-ci.org/jonathansp/guess-language) [![GoDoc](https://godoc.org/github.com/jonathansp/guess-language?status.svg)](http://godoc.org/github.com/jonathansp/guess-language)
+# guess-language
+
+[![Build Status](https://travis-ci.org/jonathansp/guess-language.svg?branch=master)](https://travis-ci.org/jonathansp/guess-language) [![GoDoc](https://godoc.org/github.com/jonathansp/guess-language?status.svg)](http://godoc.org/github.com/jonathansp/guess-language)
+
 Guess the natural language of a text (idiom).
+
+Based on: https://websvn.kde.org/branches/work/sonnet-refactoring/common/nlp/guesslanguage.cpp?view=markup
 
 
 ## Install
